@@ -1,0 +1,53 @@
+services:
+
+##############_____Wordpress_____######################################
+
+  wordpress:
+    image: wordpress
+    container_name: wordpress
+    restart: unless-stopped
+    depends_on:
+      - wpdb
+    # NEEDS ADDITIONAL SETTINGS FOR FORWARD PROXY AUTHENTIK APP IN NPM CONFIG
+    # proxy_set_header    X-Forwarded-Proto   https;
+    # proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+#Not publishing -> internal netwotrk
+#   ports:
+#     - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: wpdb
+      WORDPRESS_DB_USER: wpdb_db_user
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: wpdb_db
+    networks:
+      - internal_network
+    volumes:
+      - wordpress:/var/www/html
+
+##############_____Wordpress_DB_____###################################
+
+  wpdb:
+    image: mysql:8.0
+    container_name: wpdb
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: wpdb_db
+      MYSQL_USER: wpdb_db_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: '0'
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    networks:
+      - internal_network
+    volumes:
+      - db:/var/lib/mysql
+
+##############_____Volumes_and_networks_____###########################
+
+volumes:
+  wordpress:
+  db:
+
+networks:
+# Existing internal network
+  internal_network:
+    external: true

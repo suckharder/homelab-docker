@@ -1,0 +1,71 @@
+services:
+
+##############_____Docmost_____########################################
+
+# note: enable websockets if proxying docmost
+
+  docmost:
+    image: docmost/docmost:latest
+    container_name: docmost
+    depends_on:
+      - docmost_postgres
+      - docmost_redis
+    environment:
+      # Domain where docmost will live (optional)
+      APP_URL: 'https://docmost.example.com'
+      # Set in .env (openssl rand -hex 32)
+      APP_SECRET: ${APP_SECRET}
+      # syntax = postgresql://[user[:password]@][netloc][:port][/dbname][?param1=value1&...]
+      DATABASE_URL: 'postgresql://docmost_db_user:${POSTGRES_PASSWORD}@docmost_postgres:5432/docmost_db?schema=public'
+      REDIS_URL: 'redis://docmost_redis:6379'
+      # Don't want telemetry
+      DISABLE_TELEMETRY: 'true'
+    # Future reference  
+    # DRAWIO_URL: 'https://draw.example.com'
+    networks:
+      - internal_network
+# Not publishing -> internal netwotrk
+#   ports:
+#     - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - docmost:/app/data/storage
+
+##############_____Docmost_postgresql_____#############################
+
+  docmost_postgres:
+    image: postgres:16-alpine
+    container_name: docmost_postgres
+    environment:
+      POSTGRES_DB: docmost_db
+      POSTGRES_USER: docmost_db_user
+      # Set in .env (openssl rand -base64 36)
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - internal_network
+    volumes:
+      - docmost_db_data:/var/lib/postgresql/data
+
+##############_____Docmost_redis_____##################################
+
+  docmost_redis:
+    image: redis:7.2-alpine
+    container_name: docmost_redis
+    restart: unless-stopped
+    networks:
+      - internal_network
+    volumes:
+      - docmost_redis_data:/data
+
+##############_____Volumes_and_networks_____###########################
+
+volumes:
+  docmost:
+  docmost_db_data:
+  docmost_redis_data:
+
+networks:
+# Existing internal network
+  internal_network:
+    external: true

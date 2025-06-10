@@ -1,0 +1,34 @@
+services:
+
+##############_____Stirling_PDF_____###################################
+
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+# Not publishing -> internal netwotrk
+#   ports:
+#     - '8080:8080'
+    networks:
+      - internal_network
+    volumes:
+      - ./StirlingPDF/trainingData:/usr/share/tessdata # Required for extra OCR languages
+      - ./StirlingPDF/extraConfigs:/configs
+      - ./StirlingPDF/customFiles:/customFiles/
+      - ./StirlingPDF/logs:/logs/
+      - ./StirlingPDF/pipeline:/pipeline/
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
+      - LANGS=en_GB
+      - UI_APP_NAME=Stirling PDF
+      - UI_HOME_DESCRIPTION=A swiss army knife for PDFs.
+      - UI_APP_NAVBAR_NAME=Stirling PDF
+      # don't want analytics
+      - SYSTEM_ENABLEANALYTICS=false
+    restart: unless-stopped
+
+##############_____Volumes_and_networks_____###########################
+
+networks:
+# Existing internal network
+  internal_network:
+    external: true

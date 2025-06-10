@@ -1,0 +1,103 @@
+services:
+
+# The volumes are a mess! - This is a quick and dirty fix to prevent the stack from spawning a bunch of anonymous volumes
+# Used "docker inspect imagename --format '{{ json .Config.Volumes }}'" to inspect the images used, and piped the outputs inside volumes
+
+##############_____Onlyoffice_docserver_____###########################
+
+  onlyoffice-documentserver:
+  # not building this myself
+ #  build:
+ #    context: .
+    image: onlyoffice/documentserver
+    container_name: onlyoffice-documentserver
+    depends_on:
+      - onlyoffice-postgresql
+      - onlyoffice-rabbitmq
+    environment:
+      - DB_TYPE=postgres
+      - DB_HOST=onlyoffice-postgresql
+      # don't need this
+   #  - DB_PORT=5432
+      - DB_NAME=onlyoffice_db_user
+      - DB_USER=onlyoffice_db
+      # scratch that, onlyoffice seems to refuse to use a password
+   #  - DB_PWD=${POSTGRES_PASSWORD}
+      - AMQP_URI=amqp://guest:guest@onlyoffice-rabbitmq
+      # (I DID) Uncomment strings below to enable the JSON Web Token validation.
+      - JWT_ENABLED=true
+      # in .env (cat /dev/urandom | tr -dc A-Za-z0-9 | head -c 12)
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_HEADER=Authorization
+      - JWT_IN_BODY=true
+    networks:
+      - internal_network
+# Not publishing -> internal netwotrk
+#   ports:
+#     - '80:80'
+#     - '443:443'
+    stdin_open: true
+    restart: unless-stopped
+    stop_grace_period: 15s
+    volumes:
+    # BRUHHHH
+       - onlyoffice_server:/var/www/onlyoffice/Data
+       - onlyoffice_server:/var/log/onlyoffice
+       - onlyoffice_server:/var/lib/onlyoffice/documentserver/App_Data/cache/files
+       - onlyoffice_server:/var/www/onlyoffice/documentserver-example/public/files
+       - onlyoffice_server:/usr/share/fonts
+       - onlyoffice_server:/usr/share/fonts/truetype/custom
+       - onlyoffice_server:/var/lib/postgresql
+       - onlyoffice_server:/var/lib/rabbitmq
+       - onlyoffice_server:/var/lib/redis
+       - onlyoffice_server:/var/lib/onlyoffice
+       - onlyoffice_server:/var/lib/postgresql/data
+       
+
+##############_____Onlyoffice_rabbitmq_____############################
+
+  onlyoffice-rabbitmq:
+    container_name: onlyoffice-rabbitmq
+    #4.1.0 broke current onlyoffice server
+    image: rabbitmq:4.0.9
+    networks:
+      - internal_network
+    restart: unless-stopped
+    # don't need this
+ #  expose:
+ #    - '5672'
+    volumes:
+      - onlyoffice_rabbitmq:/var/lib/rabbitmq
+
+##############_____Onlyoffice_postgresql_____##########################
+
+  onlyoffice-postgresql:
+    container_name: onlyoffice-postgresql
+    image: postgres:12
+    environment:
+      - POSTGRES_DB=onlyoffice_db
+      - POSTGRES_USER=onlyoffice_db_user
+   # (I am apparently not) I'm setting password myself in an .env file (openssl rand -base64 36)
+      - POSTGRES_HOST_AUTH_METHOD=trust
+   # scratch that, onlyoffice seems to refuse to use a password
+   #  - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: unless-stopped
+    networks:
+      - internal_network
+    # don't need this
+ #  expose:
+ #    - '5432'
+    volumes:
+      - onlyoffice_postgresql_data:/var/lib/postgresql
+
+##############_____Volumes_and_networks_____###########################
+
+volumes:
+  onlyoffice_server:
+  onlyoffice_rabbitmq:
+  onlyoffice_postgresql_data:
+
+networks:
+# Existing internal network
+  internal_network:
+    external: true

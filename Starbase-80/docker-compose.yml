@@ -1,0 +1,33 @@
+services:
+
+##############_____Starbase-80_____####################################
+
+  starbase80:
+    image: jordanroher/starbase-80
+    container_name: starbase-80
+# Not publishing -> internal netwotrk
+#   ports:
+#     - 80:4173
+    environment:
+      - TITLE=Starbase 80
+      - LOGO=/logo.png
+      # from https://hub.docker.com/r/jordanroher/starbase-80, always open in newtab
+      - NEWWINDOW=true
+      # force darkmode
+      - THEME=dark
+    networks:
+      - internal_network
+    volumes:
+      # if mount fails remove directories and start again
+      - ./starbase-80/config.json:/app/src/config/config.json
+      - ./starbase-80/public/favicon.ico:/app/public/favicon.ico
+      - ./starbase-80/public/logo.png:/app/public/logo.png
+      - ./starbase-80/public/icons:/app/public/icons
+    restart: unless-stopped
+
+##############_____Volumes_and_networks_____###########################
+
+networks:
+# Existing internal network
+  internal_network:
+    external: true
