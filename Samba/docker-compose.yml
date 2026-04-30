@@ -1,0 +1,20 @@
+services:
+
+############################
+# SAMBA
+############################
+
+  samba:
+    image: dockurr/samba
+    container_name: samba
+    environment:
+      NAME: "Data"
+      USER: ${U_NAME}
+      PASS: ${P_WORD}
+    ports:
+      - 445:445
+    volumes:
+      - ${S_PATH}:/storage
+    restart: unless-stopped
+
+############################

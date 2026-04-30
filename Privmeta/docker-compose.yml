@@ -1,0 +1,24 @@
+services:
+
+############################
+# PRIVMETA
+############################
+
+  nextjs-app:
+    container_name: privmeta
+    # BUILIDING!
+    build: .
+    # ports:
+    #   - "3000:3000"
+    networks:
+      - internal_network
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+############################
+
+networks:
+  # Existing internal network
+  internal_network:
+    external: true

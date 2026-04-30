@@ -1,0 +1,66 @@
+services:
+
+############################
+# OPENWEBUI
+############################
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    networks:
+      - internal_network
+    environment:
+      # Required WebUI Basics
+      - WEBUI_URL=${WEBUI_URL}        # Required for OAUTH
+      - ENV=prod
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      # OSS Privacy Controls
+      - DO_NOT_TRACK=true
+      - SCARF_NO_ANALYTICS=true
+      - ANONYMIZED_TELEMETRY=false
+      - ENABLE_COMMUNITY_SHARING=false
+      - ENABLE_MODEL_DOWNLOAD=false
+      - ENABLE_OPENAI_API=false
+      # RAG Web Search
+      - ENABLE_WEB_SEARCH=true
+      - WEB_SEARCH_ENGINE=brave
+      - BRAVE_SEARCH_API_KEY=${BRAVE_SEARCH_API_KEY}
+      - WEB_SEARCH_CONCURRENT_REQUESTS=1
+      - RAG_WEB_SEARCH_SHOW_SOURCES=true
+      # Force offline model deployment
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}   # Your remote Ollama machine
+      - OLLAMA_AUTO_PULL=false
+      # Offline umbrella flag
+      - OFFLINE_MODE=false
+      # Authentication / OAuth
+      - WEBUI_AUTH=true
+      # Enable signup via OAuth
+      - ENABLE_OAUTH_SIGNUP=true
+      - ENABLE_LOGIN_FORM=false
+      # OAuth
+      - OAUTH_CLIENT_ID=${OAUTH_CLIENT_ID}
+      - OAUTH_CLIENT_SECRET=${OAUTH_CLIENT_SECRET}
+      - OAUTH_PROVIDER_NAME=authentik
+      - OPENID_PROVIDER_URL=${OPENID_PROVIDER_URL}      # .well-known
+      - OPENID_REDIRECT_URI=${OPENID_REDIRECT_URI}
+      - OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
+      # Session / Auth Controls
+      - JWT_EXPIRES_IN=168h          # 7 days session lifetime
+      # Other
+      - DEFAULT_USER_ROLE=user
+      - WEBUI_NAME=My Server
+      - ENABLE_CODE_EXECUTION=false
+    volumes:
+      - open-webui-data:/app/backend/data
+
+############################
+
+volumes:
+  open-webui-data:
+    driver: local
+
+networks:
+  # Existing internal network
+  internal_network:
+    external: true

@@ -1,7 +1,10 @@
 services:
 
-##############_____Dashy_____##########################################
+############################
+# DASHY
+############################
 
+  # used only for Glances monitoring widgets
   dashy:
     image: lissy93/dashy:latest
     container_name: dashy
@@ -9,18 +12,15 @@ services:
       - ./dashy/conf/dashy_conf.yml:/app/user-data/conf.yml
     networks:
       - internal_network
-# Not publishing -> internal netwotrk
-#   ports:
-#     - 8080:8080
-    # Set any environmental variables
+    # Not publishing -> internal network
+    #   ports:
+    #     - 8080:8080
     environment:
       - NODE_ENV=production
-    # Specify your user ID and group ID. You can find this by running `id -u` and `id -g`
+    # Specify your user ID and group ID. `id -u` and `id -g`
       - UID=1000
       - GID=1000
-    # Specify restart policy
     restart: unless-stopped
-    # Configure healthchecks
     healthcheck:
       test: ['CMD', 'node', '/app/services/healthcheck']
       interval: 1m30s
@@ -28,9 +28,9 @@ services:
       retries: 3
       start_period: 40s
 
-##############_____Volumes_and_networks_____###########################
+############################
 
 networks:
-# Existing internal network
+  # Existing internal network
   internal_network:
     external: true

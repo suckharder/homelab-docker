@@ -1,0 +1,72 @@
+services:
+
+############################
+# BLINKO
+############################
+
+    blinko-website:
+      image: blinkospace/blinko:latest
+      container_name: blinko-website
+      environment:
+        NODE_ENV: production
+        NEXTAUTH_URL: https://authentik.example.com
+        # IMPORTANT: If you want to use sso, you must set NEXTAUTH_URL to your own domain
+        NEXT_PUBLIC_BASE_URL: http://blinko.example.com
+        NEXTAUTH_SECRET: ${NXTSCT}
+        DATABASE_URL: postgresql://postgres:${PGBLPASS}@postgres:5432/postgres
+      depends_on:
+        postgres:
+          condition: service_healthy
+      # Make sure you have enough permissions.
+      volumes:
+        - ./blinko:/app/.blinko
+      restart: unless-stopped
+      logging:
+        options:
+          max-size: "10m"
+          max-file: "3"
+      # ports:
+      #   - 1111:1111
+      healthcheck:
+        test: ["CMD", "wget", "--spider", "-q", "http://blinko-website:1111/"]
+        interval: 30s
+        timeout: 10s
+        retries: 5
+        start_period: 30s
+      networks:
+        - internal_network
+
+############################
+# BLINKO DB
+############################
+
+    postgres:
+      image: postgres:14
+      container_name: blinko-postgres
+      restart: unless-stopped
+      # ports:
+      #   - 5435:5432
+      environment:
+        POSTGRES_DB: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: ${PGBLPASS}
+        TZ: Europe/Bratislava
+      # Persisting container data
+      # Make sure you have enough permissions.
+      volumes:
+        - ./db:/var/lib/postgresql/data
+      healthcheck:
+        test:
+          ["CMD", "pg_isready", "-U", "postgres", "-d", "postgres"]
+        interval: 5s
+        timeout: 10s
+        retries: 5
+      networks:
+        - internal_network
+
+############################
+
+networks:
+    # Existing internal network
+    internal_network:
+      external: true

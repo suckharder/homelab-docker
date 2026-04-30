@@ -1,6 +1,8 @@
 services:
 
-##############_____Navidrome_____######################################
+############################
+# NAVIDROME
+############################
 
   navidrome:
     image: deluan/navidrome:latest
@@ -8,22 +10,20 @@ services:
     user: 1000:1000 # should be owner of volumes
     networks:
       - internal_network
-# Not publishing -> internal netwotrk
-#   ports:
-#     - "4533:4533"
+    # Not publishing -> internal netwotrk
+    #   ports:
+    #     - "4533:4533"
     restart: unless-stopped
     environment:
-      # Optional: put your config options customization here. Examples:
       ND_LOGLEVEL: warn
-      # opt out of telemetry
       ND_ENABLEINSIGHTCOLLECTOR: false
     volumes:
       - "./navidrome/navidrome_data:/data"
-      - "./navidrome/Music:/music:ro"
-      
-##############_____Volumes_and_networks_____###########################
+      - "./navidrome/Music:/music:ro" # Music goes here
+
+############################
 
 networks:
-# Existing internal network
+  # Existing internal network
   internal_network:
     external: true

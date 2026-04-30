@@ -1,0 +1,27 @@
+services:
+
+############################
+# BENTOPDF
+############################
+
+  bentopdf:
+    # simple mode - ghcr.io/alam00000/bentopdf-simple:latest
+    # default mode - ghcr.io/alam00000/bentopdf:latest
+    image: ghcr.io/alam00000/bentopdf-simple:latest
+    container_name: bentopdf
+    restart: unless-stopped
+    # Not publishing -> internal network
+    # ports:
+    #   - '8080:8080'
+    networks:
+      - internal_network
+    # For IPv4-only environments
+    environment:
+      - DISABLE_IPV6=true
+
+############################
+
+networks:
+  # Existing internal network
+  internal_network:
+    external: true

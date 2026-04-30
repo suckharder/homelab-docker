@@ -1,0 +1,60 @@
+services:
+
+############################
+# NEXTCLOUD DB
+############################
+
+  nxdb:
+    image: mariadb:10.6
+    container_name: nextcloud-db
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    networks:
+      - internal_network
+    volumes:
+      - nextcloud-mariadb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=nextcloud_db
+      - MYSQL_USER=nextcloud_db_user
+
+############################
+# NEXTCLOUD
+############################
+
+  nextcloud-app:
+    image: nextcloud:stable
+    container_name: nextcloud-app
+    restart: unless-stopped
+    # Not publishing -> internal netwotrk
+    #   ports:
+    #     - 8080:80
+    # Probably unnecessary - same network, legacy feature ??
+    links:
+      - nxdb
+    networks:
+      - internal_network
+    volumes:
+      - nextcloud:/var/www/html
+      - ./nextcloud/data:/var/www/html/data # Nextcloud data folder
+    environment:
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=nextcloud_db
+      - MYSQL_USER=nextcloud_db_user
+      # Docs: "The default host name used by the mysql command-line client."
+      - MYSQL_HOST=nxdb
+      - NEXTCLOUD_TRUSTED_DOMAINS=192.168.*.* nextcloud.example.com *.example.com example.com
+      - OVERWRITEPROTOCOL=https
+   #  - OVERWRITECLIURL=https://nextcloud.example.com
+
+############################
+
+volumes:
+  nextcloud:
+  nextcloud-mariadb:
+
+networks:
+  # Existing internal network
+  internal_network:
+    external: true

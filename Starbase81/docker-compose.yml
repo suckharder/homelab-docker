@@ -1,0 +1,36 @@
+services:
+
+############################
+# STARBASE 81
+############################
+
+    starbase-81:
+        build: ./starbase-81-src
+        image: suckharder/starbase-81:preview
+        container_name: starbase-81
+        #ports:
+        #    - 80:4173
+        environment:
+            - TITLE=My Server
+            - LOGO=/logo.png
+            - BGIMAGE=url(/background.jpg)
+            - THEME=dark
+            - SHOWAUTHWIDGET=true
+            - AUTHENTIKURL=authentik.example.com
+            - PWA=true
+            - PWA_THEME=#2C2C2E
+        restart: unless-stopped
+        networks:
+            - internal_network
+        volumes:
+            - ./config.json:/app/src/config/config.json
+            - ./public/favicon.ico:/app/public/favicon.ico
+            - ./public/logo.png:/app/public/logo.png
+            - ./public/background.jpg:/app/public/background.jpg
+            - ./public/icons:/app/public/icons
+
+############################
+
+networks:
+    internal_network:
+        external: true

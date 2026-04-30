@@ -1,14 +1,16 @@
 services:
 
-##############_____Portainer_____######################################
+############################
+# PORTAINER
+############################
 
   portainer:
     image: portainer/portainer-ce:lts
     container_name: portainer-ce
-# Not publishing -> internal netwotrk
-#   ports:
-#     - 8000:8000
-#     - 9443:9443
+    # Not publishing -> internal netwotrk
+    #   ports:
+    #     - 8000:8000
+    #     - 9443:9443
     networks:
       - internal_network
     volumes:
@@ -16,12 +18,12 @@ services:
         - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
 
-##############_____Volumes_and_networks_____###########################
+############################
 
 volumes:
   portainer_data:
 
 networks:
-# Existing internal network
+  # Existing internal network
   internal_network:
     external: true

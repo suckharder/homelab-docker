@@ -1,0 +1,88 @@
+services:
+
+############################
+# GLUETUN
+############################
+
+  # This deployment uses Mullvad VPN
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    # not publishing
+    # ports:
+    #   - 8080:8080 #qbittorrent webui
+    #   - 6881:6881 #qbittorrent
+    #   - 6881:6881/udp #qbittorrent
+    #   - 3000:3000 #firefox http
+    #   - 3001:3001 #firefox https
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=mullvad
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - SERVER_CITIES=${SERVER_CITIES}
+      - DNS_SERVER=on
+      - DNS_UPSTREAM_RESOLVER_TYPE=dot
+      - DNS_UPSTREAM_RESOLVERS=cloudflare # most reliable with trackers
+      - DNS_CACHING=on
+    restart: unless-stopped
+    networks:
+      internal_network:
+        ipv4_address: 172.18.0.67
+      
+
+############################
+# QBITTORRENT		
+############################
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+      - TORRENTING_PORT=6881
+    volumes:
+      - ./qbittorrent/config:/config
+      - ${QB_DL}:/downloads
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+# FIREFOX		
+############################
+
+  firefox:
+    image: lscr.io/linuxserver/firefox:latest
+    container_name: firefox
+    security_opt:
+      - seccomp:unconfined # optional
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./firefox/config:/config
+      - ${FF_DL}:/downloads # don't forget to change the download folder to /downloads in FF settings
+    network_mode: "service:gluetun"
+    shm_size: "1gb"
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
+        restart: true
+    
+############################
+networks:
+  # Existing internal network
+  internal_network:
+    external: true
